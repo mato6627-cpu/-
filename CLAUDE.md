@@ -26,8 +26,8 @@
 このプロジェクトは**複数PCで作業しても問題が起きないよう**、次の原則で運用する（2026-07-29 確立）。
 
 - **唯一の正は GitHubリモート `Mirise-Corp/hojokin-finder`**。ローカルフォルダはどのPCでも「そのcloneコピー」にすぎない。パス（ユーザー名・場所）はPCごとに違ってよい。**絶対パスを正としない**。
-- **作業フォルダは各PCのローカルディスクに置く**（例：`C:\Users\<ユーザー名>\Desktop\Claude-work\ミライズ_LINEモックアップ`）。
-- **OneDrive配下（`OneDrive - 伊勢山会計\デスクトップ\...`）に作業フォルダを置かない**。OneDrive同期だと複数PCが同じ同期フォルダを見て競合し、フォルダの二重化・スタブ化・「削除予定」化などの事故が起きる（2026-07に実際に発生）。
+- **作業フォルダは `%USERPROFILE%\repos\hojokin-finder` に置く**（＝`C:\Users\<ユーザー名>\repos\hojokin-finder`）。`%USERPROFILE%` はどのPCでも自分のユーザーフォルダを自動で指すので、この一箇所に決めておけばPCが変わっても同じ設定で動く。巡回タスクもこのパス基準。
+- **クラウド同期フォルダ（OneDrive配下・Googleドライブ `G:\マイドライブ\...` 配下）に作業フォルダを絶対に置かない**。同期と `.git` が競合し、フォルダの消失・巻き戻り（古い版で復元）・二重化・スタブ化などの事故が起きる。実際に OneDrive で2026-07、Googleドライブで2026-08 に発生（Gドライブは消失＋3週間前の古い版で巻き戻る二重事故）。PC間共有はクラウド同期ではなく **GitHub経由（各PCでclone→pull/push）** で行う。
 - **作業の型は必ず「pull → 編集 → push」**。作業を始める前に `git pull origin main` で最新化し、終えたら `git push origin main`。これでPCが変わっても食い違わない。
 - 別PC（または新規）で始めるときは、下の「初回セットアップ」でローカルにcloneしてから作業する。
 
@@ -59,11 +59,10 @@ git push origin main
 ```
 
 #### 初回セットアップ（新PCの場合）
-**ローカルディスク上の任意の場所**（OneDrive配下は避ける）で、リモートをcloneするだけ。
+**`%USERPROFILE%\repos` にcloneする**（クラウド同期フォルダ＝OneDrive／Gドライブ配下は絶対に避ける）。
 ```bash
-cd "C:/Users/<ユーザー名>/Desktop/Claude-work"   # OneDrive配下でない場所
-git clone https://github.com/Mirise-Corp/hojokin-finder.git ミライズ_LINEモックアップ
-cd ミライズ_LINEモックアップ
+git clone https://github.com/Mirise-Corp/hojokin-finder.git "$USERPROFILE/repos/hojokin-finder"
+cd "$USERPROFILE/repos/hojokin-finder"
 git config credential.helper manager
 git config user.name "mato6627-cpu"
 git config user.email "mato6627@gmail.com"
@@ -87,16 +86,16 @@ git remote set-url origin https://github.com/Mirise-Corp/hojokin-finder.git
 ### Claude起動ショートカット
 `Claude起動.lnk` をフォルダ内に作成済み。ダブルクリックでこのプロジェクトのClaude Codeが直接開く。
 
-- **ショートカットの場所：** `C:\Users\Iseyama-67\Desktop\Claude-work\ミライズ_LINEモックアップ\Claude起動.lnk`（このPCの例。OneDrive配下ではなくローカルDesktop）
-- **起動先：** `C:\Users\Iseyama-67\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\bin\claude.exe`
-- **作業ディレクトリ：** cloneしたローカルフォルダ（このPCでは `C:\Users\Iseyama-67\Desktop\Claude-work\ミライズ_LINEモックアップ`）
+- **ショートカットの場所：** `%USERPROFILE%\repos\hojokin-finder\Claude起動.lnk`（クラウド同期フォルダではなくローカルの repos）
+- **起動先：** `%USERPROFILE%\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\bin\claude.exe`
+- **作業ディレクトリ：** `%USERPROFILE%\repos\hojokin-finder`
 
-新PCでショートカットを作り直す場合はPowerShellで（パスは各PCのclone先に合わせる）：
+新PCでショートカットを作り直す場合はPowerShellで：
 ```powershell
 $shell = New-Object -ComObject WScript.Shell
-$lnk = $shell.CreateShortcut("C:\Users\[ユーザー名]\Desktop\Claude-work\ミライズ_LINEモックアップ\Claude起動.lnk")
-$lnk.TargetPath = "C:\Users\[ユーザー名]\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\bin\claude.exe"
-$lnk.WorkingDirectory = "C:\Users\[ユーザー名]\Desktop\Claude-work\ミライズ_LINEモックアップ"
+$lnk = $shell.CreateShortcut("$env:USERPROFILE\repos\hojokin-finder\Claude起動.lnk")
+$lnk.TargetPath = "$env:USERPROFILE\AppData\Roaming\npm\node_modules\@anthropic-ai\claude-code\bin\claude.exe"
+$lnk.WorkingDirectory = "$env:USERPROFILE\repos\hojokin-finder"
 $lnk.Save()
 ```
 
@@ -114,7 +113,7 @@ $lnk.Save()
         "hooks": [
           {
             "type": "command",
-            "command": "python \"C:\\Users\\[ユーザー名]\\Desktop\\Claude-work\\ミライズ_LINEモックアップ\\update_header_date.py\""
+            "command": "python \"%USERPROFILE%\\repos\\hojokin-finder\\update_header_date.py\""
           }
         ]
       }
